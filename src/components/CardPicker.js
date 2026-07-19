@@ -1,15 +1,25 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { View, Text, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Dimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Animated, {
-  FadeIn, ZoomIn, useSharedValue, useAnimatedStyle, withSpring,
+  ZoomIn, Easing,
+  useSharedValue, useAnimatedStyle, useAnimatedScrollHandler,
+  withSpring, withTiming, withDelay,
 } from 'react-native-reanimated';
 import PressableScale from './PressableScale';
 import CardBack from './CardBack';
 import AmbientStars from './AmbientStars';
 import { DECK } from '../data/tarot';
 import { colors, spacing, radius, font, serif, shadow } from '../theme';
+
+const { width: SCREEN_W } = Dimensions.get('window');
+const CARD_W = 96;
+const CARD_H = 154;
+const STEP = 40;                    // horizontal advance per card (→ heavy overlap)
+const ROW_H = CARD_H + 96;          // room for cards to rise
+const HALF = SCREEN_W / 2;
+const SIDE = HALF - CARD_W / 2;     // padding so the first/last card can reach centre
 
 function shuffle(arr) {
   const a = [...arr];
@@ -26,20 +36,44 @@ function positionsFor(count) {
   return ['Your Card'];
 }
 
-/* One face-down card in the deck — springs up + glows when selected. */
-function DeckCard({ name, index, selected, order, onPress }) {
-  const lift = useSharedValue(0);
+/* One face-down card in the arc. It deals in from the stack, fans by its
+   distance from centre, rises when in focus, and lifts out when chosen. */
+function FanCard({ name, index, selected, order, onPress, scrollX }) {
+  const appear = useSharedValue(0);
+  const sel = useSharedValue(selected ? 1 : 0);
+
   useEffect(() => {
-    lift.value = withSpring(selected ? 1 : 0, { damping: 13, stiffness: 200 });
-  }, [selected]); // eslint-disable-line
-  const aStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: -12 * lift.value }, { scale: 1 + 0.06 * lift.value }],
-  }));
+    appear.value = withDelay(Math.min(index, 42) * 10, withTiming(1, { duration: 460, easing: Easing.out(Easing.cubic) }));
+  }, []); // eslint-disable-line
+  useEffect(() => { sel.value = withSpring(selected ? 1 : 0, { damping: 14, stiffness: 180 }); }, [selected]); // eslint-disable-line
+
+  const aStyle = useAnimatedStyle(() => {
+    const d = appear.value;
+    const s = sel.value;
+    const cardCenter = SIDE + index * STEP + CARD_W / 2;
+    const dist = cardCenter - scrollX.value - HALF;         // px from viewport centre
+    const nd = Math.max(-1, Math.min(1, dist / (STEP * 4))); // fan tilt, saturates at edges
+    const near = 1 - Math.min(1, Math.abs(dist) / (STEP * 2.4)); // 1 at centre → 0 away
+    const flyX = (1 - d) * Math.max(-150, Math.min(150, HALF - cardCenter)) * 0.5;
+    const ty = ((-near * 20) + Math.abs(nd) * 14) * d - 48 * s;
+    const rot = nd * 18 * d;
+    return {
+      opacity: d,
+      zIndex: s > 0.5 ? 200 : Math.round(near * 30),
+      transform: [
+        { translateX: flyX },
+        { translateY: (1 - d) * 28 + ty },
+        { rotateZ: `${rot}deg` },
+        { scale: (0.7 + 0.3 * d) * (1 + near * 0.06 + 0.06 * s) },
+      ],
+    };
+  });
+
   return (
-    <Animated.View entering={FadeIn.delay(Math.min(index, 30) * 14)} style={styles.cell}>
-      <Animated.View style={aStyle}>
-        <PressableScale to={0.92} onPress={onPress} style={[styles.cardShell, selected && styles.cardShellOn]}>
-          <CardBack style={StyleSheet.absoluteFill} moon={16} />
+    <View style={styles.slotItem}>
+      <Animated.View style={[styles.cardHolder, aStyle]}>
+        <PressableScale to={0.9} onPress={onPress} style={[styles.cardShell, selected && styles.cardShellOn]}>
+          <CardBack style={StyleSheet.absoluteFill} moon={20} />
           {selected ? (
             <>
               <View style={styles.selRing} pointerEvents="none" />
@@ -48,18 +82,20 @@ function DeckCard({ name, index, selected, order, onPress }) {
           ) : null}
         </PressableScale>
       </Animated.View>
-    </Animated.View>
+    </View>
   );
 }
 
-// Full-screen face-down picker. The deck is freshly shuffled every time, so the
-// cards you pick are always unique + unseen until the reading is revealed.
+// Full-screen face-down picker. Fresh shuffle each time → unique, unseen cards.
 export default function CardPicker({ count = 1, topicLabel, onDone, onCancel }) {
   const insets = useSafeAreaInsets();
   const [seed, setSeed] = useState(0);
   const deck = useMemo(() => shuffle(DECK), [seed]);
   const [picked, setPicked] = useState([]); // indices into `deck`
   const positions = positionsFor(count);
+
+  const scrollX = useSharedValue(0);
+  const onScroll = useAnimatedScrollHandler({ onScroll: (e) => { scrollX.value = e.contentOffset.x; } });
 
   const toggle = (i) => {
     setPicked((p) => {
@@ -74,7 +110,6 @@ export default function CardPicker({ count = 1, topicLabel, onDone, onCancel }) 
   const ready = picked.length === count;
   const reveal = () => onDone(picked.map((i) => deck[i]));
 
-  // one-shot bounce on the reveal button when it becomes ready
   const bounce = useSharedValue(1);
   useEffect(() => { if (ready) { bounce.value = 0.9; bounce.value = withSpring(1, { damping: 6, stiffness: 220 }); } }, [ready]); // eslint-disable-line
   const bounceStyle = useAnimatedStyle(() => ({ transform: [{ scale: bounce.value }] }));
@@ -82,11 +117,12 @@ export default function CardPicker({ count = 1, topicLabel, onDone, onCancel }) 
   return (
     <View style={[styles.root, { paddingTop: insets.top + spacing.sm }]}>
       <AmbientStars count={22} />
+
       {/* Header */}
       <View style={styles.header}>
         <PressableScale onPress={onCancel} hitSlop={10}><Ionicons name="close" size={22} color={colors.textMuted} /></PressableScale>
         <View style={{ flex: 1 }}>
-          <Text style={styles.title}>Choose {count} card{count > 1 ? 's' : ''}</Text>
+          <Text style={styles.title}>Draw {count} card{count > 1 ? 's' : ''}</Text>
           <Text style={styles.sub}>{topicLabel} · deck shuffled ✨</Text>
         </View>
         <PressableScale to={0.94} onPress={reshuffle} style={styles.shuffleBtn}>
@@ -117,16 +153,28 @@ export default function CardPicker({ count = 1, topicLabel, onDone, onCancel }) 
         })}
       </View>
 
-      <Text style={styles.hint}>Apni intuition pe bharosa karo — cards face-down hain. Tap to choose.</Text>
+      <Text style={styles.hint}>Swipe the spread · tap a card to draw it ✨</Text>
 
-      {/* Deck grid */}
-      <ScrollView contentContainerStyle={styles.grid} showsVerticalScrollIndicator={false}>
-        {deck.map((name, i) => {
-          const on = picked.includes(i);
-          const order = on ? picked.indexOf(i) + 1 : null;
-          return <DeckCard key={`${seed}-${name}`} name={name} index={i} selected={on} order={order} onPress={() => toggle(i)} />;
-        })}
-      </ScrollView>
+      {/* Fanned spread */}
+      <View style={styles.fanArea}>
+        <View style={styles.focusGlow} pointerEvents="none" />
+        <Animated.ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          onScroll={onScroll}
+          scrollEventThrottle={16}
+          snapToInterval={STEP}
+          decelerationRate="fast"
+          contentContainerStyle={{ paddingHorizontal: SIDE, alignItems: 'flex-end' }}
+        >
+          {deck.map((name, i) => {
+            const on = picked.includes(i);
+            const order = on ? picked.indexOf(i) + 1 : null;
+            return <FanCard key={`${seed}-${name}`} name={name} index={i} selected={on} order={order} onPress={() => toggle(i)} scrollX={scrollX} />;
+          })}
+        </Animated.ScrollView>
+        <View style={styles.pointer} pointerEvents="none"><Ionicons name="caret-up" size={18} color={colors.gold} /></View>
+      </View>
 
       {/* Reveal */}
       <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, 10) + 92 }]}>
@@ -137,7 +185,7 @@ export default function CardPicker({ count = 1, topicLabel, onDone, onCancel }) 
             style={[styles.reveal, ready ? styles.revealReady : styles.revealIdle]}
           >
             <Text style={[styles.revealText, !ready && { color: colors.textMuted }]}>
-              {ready ? '✨ Reveal My Reading' : `Choose ${count - picked.length} more`}
+              {ready ? '✨ Reveal My Reading' : `Draw ${count - picked.length} more`}
             </Text>
           </PressableScale>
         </Animated.View>
@@ -146,7 +194,6 @@ export default function CardPicker({ count = 1, topicLabel, onDone, onCancel }) 
   );
 }
 
-const CARD_W = '11.5%';
 const styles = StyleSheet.create({
   root: { ...StyleSheet.absoluteFillObject, backgroundColor: colors.bgDeep, zIndex: 100 },
   header: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingHorizontal: spacing.md, paddingBottom: spacing.sm },
@@ -166,13 +213,17 @@ const styles = StyleSheet.create({
 
   hint: { color: colors.textMuted, fontSize: font.small, textAlign: 'center', marginVertical: spacing.sm, fontStyle: 'italic', paddingHorizontal: spacing.md },
 
-  grid: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'center', paddingHorizontal: spacing.sm, gap: 6, paddingBottom: spacing.md },
-  cell: { width: CARD_W },
-  cardShell: { width: '100%', aspectRatio: 0.62, borderRadius: radius.sm, overflow: 'hidden' },
-  cardShellOn: shadow({ color: '#e9c46a', opacity: 0.6, radius: 12, y: 4 }),
-  selRing: { ...StyleSheet.absoluteFillObject, borderRadius: radius.sm, borderWidth: 2, borderColor: colors.goldBright },
-  selBadge: { position: 'absolute', top: 3, right: 3, width: 17, height: 17, borderRadius: 9, backgroundColor: colors.goldBright, alignItems: 'center', justifyContent: 'center' },
-  selNum: { color: '#1a1206', fontWeight: '900', fontSize: 11 },
+  // fanned spread
+  fanArea: { flex: 1, justifyContent: 'center' },
+  focusGlow: { position: 'absolute', alignSelf: 'center', bottom: 40, width: 200, height: 200, borderRadius: 100, backgroundColor: 'rgba(233,196,106,0.10)' },
+  slotItem: { width: STEP, height: ROW_H, alignItems: 'center', justifyContent: 'flex-end' },
+  cardHolder: { width: CARD_W, height: CARD_H },
+  cardShell: { width: CARD_W, height: CARD_H, borderRadius: radius.md, overflow: 'hidden', ...shadow({ color: '#000000', opacity: 0.5, radius: 10, y: 8 }) },
+  cardShellOn: shadow({ color: '#e9c46a', opacity: 0.7, radius: 16, y: 4 }),
+  selRing: { ...StyleSheet.absoluteFillObject, borderRadius: radius.md, borderWidth: 2.5, borderColor: colors.goldBright },
+  selBadge: { position: 'absolute', top: 5, right: 5, width: 20, height: 20, borderRadius: 10, backgroundColor: colors.goldBright, alignItems: 'center', justifyContent: 'center' },
+  selNum: { color: '#1a1206', fontWeight: '900', fontSize: 12 },
+  pointer: { position: 'absolute', alignSelf: 'center', bottom: 6 },
 
   footer: { paddingHorizontal: spacing.lg, paddingTop: spacing.sm },
   reveal: { borderRadius: radius.pill, paddingVertical: 15, alignItems: 'center' },

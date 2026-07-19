@@ -7,12 +7,12 @@ import Screen from '../../src/components/Screen';
 import GradientButton from '../../src/components/GradientButton';
 import PressableScale from '../../src/components/PressableScale';
 import { DatePickerField, TimePickerField, PlacePickerField } from '../../src/components/Pickers';
+import RazorpayCheckout from '../../src/components/RazorpayCheckout';
 import { useAuth } from '../../src/context/AuthContext';
+import { isRazorpayConfigured, PRICES } from '../../src/lib/razorpay';
 import { colors, spacing, radius, font, serif } from '../../src/theme';
 
-// Paste your Razorpay ₹99 Payment Link here to send users straight to checkout.
-// Until then, the button opens the live kundli page where the ₹99 order is created.
-const KUNDLI_PAY_LINK = '';
+// If Razorpay isn't configured yet, the button falls back to the live kundli page.
 const KUNDLI_FALLBACK_URL = 'https://thedivinetarotonline.com/kundli-milan';
 
 const TIMEZONES = [
@@ -96,6 +96,8 @@ export default function Kundli() {
   const [tzFor, setTzFor] = useState(null); // 1 | 2 | null
   const [result, setResult] = useState(false);
   const [email, setEmail] = useState((user && user.email) || '');
+  const [payOpen, setPayOpen] = useState(false);
+  const [paid, setPaid] = useState(false);
 
   const pickTz = (i) => {
     if (tzFor === 1) setP1({ ...p1, tz: i });
@@ -108,9 +110,9 @@ export default function Kundli() {
     setResult(true);
   };
 
-  // Opens the ₹99 Razorpay checkout when a payment link is set; otherwise the
-  // live kundli page (where the site creates the ₹99 order).
-  const pay = () => Linking.openURL(KUNDLI_PAY_LINK || KUNDLI_FALLBACK_URL);
+  // Opens the in-app ₹99 Razorpay checkout when configured; otherwise the live
+  // kundli page (where the site creates the ₹99 order).
+  const pay = () => { if (isRazorpayConfigured()) setPayOpen(true); else Linking.openURL(KUNDLI_FALLBACK_URL); };
 
   return (
     <Screen>
@@ -133,12 +135,20 @@ export default function Kundli() {
             If exact birth time is unknown, keep 12:00 — the Moon sign is correct on most days but may shift near a transition.
           </Text>
         </Animated.View>
+      ) : paid ? (
+        <Animated.View entering={FadeInDown.duration(450)} style={styles.locked}>
+          <View style={[styles.lockCircle, { borderColor: colors.gold }]}><Ionicons name="checkmark" size={28} color={colors.gold} /></View>
+          <Text style={styles.lockTitle}>Payment received ✨</Text>
+          <Text style={styles.lockSub}>
+            Thank you! Your full Ashtakoota report for {p1.name || 'Person 1'} & {p2.name || 'Person 2'} is being prepared and will be emailed to {email || 'your inbox'} shortly.
+          </Text>
+        </Animated.View>
       ) : (
         <Animated.View entering={FadeInDown.duration(450)} style={styles.locked}>
           <View style={styles.lockCircle}><Ionicons name="lock-closed" size={26} color={colors.gold} /></View>
           <Text style={styles.lockTitle}>Your Kundli Milan is ready</Text>
           <Text style={styles.lockSub}>
-            Unlock your full compatibility result for just ₹99 — the score out of 36, the 8-koota breakdown, dosha analysis and a detailed report emailed to you.
+            Unlock your full compatibility result for just ₹{PRICES.kundli} — the score out of 36, the 8-koota breakdown, dosha analysis and a detailed report emailed to you.
           </Text>
 
           {BENEFITS.map((b, i) => (
@@ -157,7 +167,7 @@ export default function Kundli() {
             keyboardType="email-address"
             autoCapitalize="none"
           />
-          <GradientButton label="Pay ₹99 & Reveal Result" onPress={pay} style={{ alignSelf: 'stretch', marginTop: spacing.sm }} />
+          <GradientButton label={`Pay ₹${PRICES.kundli} & Reveal Result`} onPress={pay} style={{ alignSelf: 'stretch', marginTop: spacing.sm }} />
           <Text style={styles.secure}>Secure payment via Razorpay · Instant delivery</Text>
         </Animated.View>
       )}
@@ -180,6 +190,15 @@ export default function Kundli() {
           </View>
         </View>
       </Modal>
+
+      <RazorpayCheckout
+        visible={payOpen}
+        amount={PRICES.kundli}
+        description="Kundli Milan — full Ashtakoota report"
+        prefill={{ name: p1.name, email, contact: (user && user.phone) || '' }}
+        onSuccess={() => { setPayOpen(false); setPaid(true); }}
+        onClose={() => setPayOpen(false)}
+      />
     </Screen>
   );
 }

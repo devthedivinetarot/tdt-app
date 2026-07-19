@@ -9,13 +9,13 @@ import Animated, {
   useAnimatedStyle,
   withSpring,
   withTiming,
+  interpolateColor,
   Easing,
 } from 'react-native-reanimated';
 import { colors, gradients, radius, font, shadow, IS_WEB } from '../theme';
 import { select } from '../lib/haptics';
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
-const AGradient = Animated.createAnimatedComponent(LinearGradient);
 
 // icon (filled / outline) + notification dot per route
 const TABS = {
@@ -33,13 +33,13 @@ function TabItem({ focused, cfg, label, onPress }) {
     a.value = withSpring(focused ? 1 : 0, { damping: 13, stiffness: 150 });
   }, [focused]);
 
-  // Gold circle behind the active icon — pops + lifts + glows
+  // Gold circle behind the active icon — fades + pops + lifts + glows.
+  // The whole circle fades (opacity a.value) so inactive tabs show NO ring.
   const circle = useAnimatedStyle(() => {
-    const s = { transform: [{ scale: 0.7 + a.value * 0.3 }, { translateY: -a.value * 10 }] };
+    const s = { opacity: a.value, transform: [{ scale: 0.6 + a.value * 0.4 }, { translateY: -a.value * 10 }] };
     if (!IS_WEB) s.shadowOpacity = a.value * 0.6;
     return s;
   });
-  const fill = useAnimatedStyle(() => ({ opacity: a.value }));
   const filled = useAnimatedStyle(() => ({ opacity: a.value, transform: [{ translateY: -a.value * 10 }] }));
   const outline = useAnimatedStyle(() => ({ opacity: 1 - a.value }));
   const labelStyle = useAnimatedStyle(() => ({
@@ -51,7 +51,7 @@ function TabItem({ focused, cfg, label, onPress }) {
     <AnimatedPressable style={styles.item} onPress={onPress} hitSlop={6}>
       <View style={styles.iconArea}>
         <Animated.View style={[styles.circle, circle]}>
-          <AGradient colors={gradients.gold} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={[StyleSheet.absoluteFill, styles.circleFill, fill]} />
+          <LinearGradient colors={gradients.gold} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={StyleSheet.absoluteFill} />
         </Animated.View>
         {/* outline (inactive) */}
         <Animated.View style={[styles.iconAbs, outline]}>
@@ -119,11 +119,11 @@ const styles = StyleSheet.create({
     width: 46,
     height: 46,
     borderRadius: 23,
+    overflow: 'hidden',
     borderWidth: 1,
     borderColor: 'rgba(245,222,179,0.9)',
-    ...shadow({ color: colors.gold, opacity: IS_WEB ? 0.5 : 0, radius: 12, y: 0, elevation: 0 }),
+    ...shadow({ color: colors.gold, opacity: IS_WEB ? 0.55 : 0, radius: 12, y: 0, elevation: 0 }),
   },
-  circleFill: { borderRadius: 23 },
   iconAbs: { position: 'absolute' },
   dot: { position: 'absolute', top: 2, right: 6, width: 9, height: 9, borderRadius: 5, backgroundColor: '#f43f5e', borderWidth: 1.5, borderColor: colors.bgDeep },
   label: { fontSize: font.tiny, fontWeight: '700', marginTop: 6 },

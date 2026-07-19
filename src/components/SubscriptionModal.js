@@ -1,13 +1,12 @@
-import React from 'react';
-import { View, Text, Modal, Linking, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, Modal, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import PressableScale from './PressableScale';
+import RazorpayCheckout from './RazorpayCheckout';
 import { grantPremium } from '../lib/rateLimit';
+import { useAuth } from '../context/AuthContext';
+import { isRazorpayConfigured, PRICES } from '../lib/razorpay';
 import { colors, spacing, radius, font, serif } from '../theme';
-
-// Paste your Razorpay subscription/payment link here to charge for real.
-// Empty = "incubated": grants a 30-day full-access window immediately.
-const RZP_SUBSCRIBE_LINK = '';
 
 const BENEFITS = [
   'Unlimited readings — no daily limit',
@@ -17,12 +16,18 @@ const BENEFITS = [
 ];
 
 export default function SubscriptionModal({ visible, onClose, onSubscribed }) {
+  const { user } = useAuth();
+  const [pay, setPay] = useState(false);
+
   const subscribe = async () => {
-    if (RZP_SUBSCRIBE_LINK) {
-      Linking.openURL(RZP_SUBSCRIBE_LINK);
-      return;
-    }
-    await grantPremium(30); // incubated grant
+    if (isRazorpayConfigured()) { setPay(true); return; } // real checkout
+    await grantPremium(30); // incubated grant (until you paste your Key ID)
+    onSubscribed && onSubscribed();
+  };
+
+  const onPaid = async () => {
+    setPay(false);
+    await grantPremium(30);
     onSubscribed && onSubscribed();
   };
 
@@ -43,7 +48,9 @@ export default function SubscriptionModal({ visible, onClose, onSubscribed }) {
           ))}
 
           <PressableScale to={0.96} onPress={subscribe} style={styles.subscribe}>
-            <Text style={styles.subscribeText}>Subscribe — Full Access ✨</Text>
+            <Text style={styles.subscribeText}>
+              {isRazorpayConfigured() ? `Subscribe ₹${PRICES.subscription} — Full Access ✨` : 'Subscribe — Full Access ✨'}
+            </Text>
           </PressableScale>
           <Text style={styles.secure}>Secure payment via Razorpay · 30-day access</Text>
 
@@ -52,6 +59,15 @@ export default function SubscriptionModal({ visible, onClose, onSubscribed }) {
           </PressableScale>
         </View>
       </View>
+
+      <RazorpayCheckout
+        visible={pay}
+        amount={PRICES.subscription}
+        description="30-day full access — Ginni Ki Baatein"
+        prefill={{ name: user && user.name, email: user && user.email, contact: user && user.phone }}
+        onSuccess={onPaid}
+        onClose={() => setPay(false)}
+      />
     </Modal>
   );
 }
