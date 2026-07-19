@@ -12,7 +12,20 @@
           "package_name": "com.thedivinetarot.app"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "491968377977-6q8qs9ne9dafb514ktj4qvdvr0vok77m.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.thedivinetarot.app",
+            "certificate_hash": "10bb752b1d01f17ffcc20fffdfe568c2d5f75fc0"
+          }
+        },
+        {
+          "client_id": "491968377977-oo00ivdvpl41vmbhmjig7kp2t6juu7je.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyAAn0cd_-B98UtMn1tL4GMPjHJByEF_cBI"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "491968377977-oo00ivdvpl41vmbhmjig7kp2t6juu7je.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
