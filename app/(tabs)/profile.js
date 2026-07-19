@@ -40,7 +40,7 @@ function AuthView() {
   const send = async () => {
     setErr('');
     const ok = await startPhoneOTP(phone);
-    if (!ok) setErr('Number sahi hai? OTP bhejne mein dikkat aa rahi hai — dobara try karein.');
+    if (!ok) setErr('Phone OTP abhi available nahi hai — kripya Google se sign in karein.');
   };
   const verify = async () => {
     setErr('');
@@ -104,7 +104,7 @@ function AuthView() {
       )}
 
       {err ? <Text style={styles.err}>{err}</Text> : null}
-      <Text style={styles.demoNote}>Real OTP via SMS · Google sign-in live.</Text>
+      <Text style={styles.demoNote}>Sign in with Google · Phone OTP coming soon.</Text>
     </Screen>
   );
 }

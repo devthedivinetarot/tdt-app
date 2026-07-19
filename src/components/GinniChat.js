@@ -161,12 +161,12 @@ export default function GinniChat() {
           if (m.role === 'user') return <View key={m.id} style={[styles.bubble, styles.userBubble]}><Text style={styles.userText}>{m.text}</Text></View>;
           if (m.role === 'ginni') return <View key={m.id} style={[styles.bubble, styles.ginniBubble]}><Text style={styles.ginniText}>{m.text}</Text></View>;
           return (
-            <View key={m.id} style={[styles.bubble, styles.ginniBubble]}>
+            <View key={m.id} style={[styles.bubble, styles.ginniBubble, styles.readingBubble]}>
               <Text style={styles.topicLabel}>✨ {m.topicLabel}</Text>
               {m.cards.map((c, i) => (
                 <View key={i} style={styles.cardRow}>
                   <FlipCard name={c.card} delay={i * 170} />
-                  <View style={{ flex: 1 }}>
+                  <View style={styles.cardInfo}>
                     {c.position ? <Text style={styles.pos}>{c.position}</Text> : null}
                     <Text style={styles.cardName}>{c.card}</Text>
                     <Text style={styles.readingText}>{c.text}</Text>
@@ -237,14 +237,18 @@ const styles = StyleSheet.create({
   ginniBubble: { alignSelf: 'flex-start', backgroundColor: colors.bgCard, borderWidth: 1, borderColor: colors.border },
   ginniText: { color: colors.text, fontSize: font.body, lineHeight: 22 },
 
+  // Readings need full width so the card + text don't collapse into a sliver.
+  readingBubble: { alignSelf: 'stretch', maxWidth: '100%' },
+
   topicLabel: { color: colors.gold, fontWeight: '800', fontSize: font.small, marginBottom: spacing.sm, letterSpacing: 0.5 },
-  cardRow: { flexDirection: 'row', gap: spacing.md, marginBottom: spacing.md },
+  cardRow: { flexDirection: 'row', gap: spacing.md, marginBottom: spacing.md, alignItems: 'flex-start' },
+  cardInfo: { flex: 1, minWidth: 0 },
   cardImg: { width: 74, height: 124, borderRadius: radius.sm, backgroundColor: colors.bgCardSolid, borderWidth: 1, borderColor: colors.glassBorder },
   flipFace: { borderRadius: radius.sm, overflow: 'hidden', backfaceVisibility: 'hidden' },
   cardFallback: { alignItems: 'center', justifyContent: 'center', padding: 4 },
   cardFallbackText: { color: colors.gold, fontSize: font.tiny, textAlign: 'center', fontWeight: '700' },
   pos: { color: colors.textMuted, fontSize: font.tiny, fontWeight: '800', letterSpacing: 1 },
-  cardName: { color: colors.gold, fontFamily: serif, fontSize: font.h3, fontWeight: '700' },
+  cardName: { color: colors.gold, fontFamily: serif, fontSize: font.h3, fontWeight: '700', flexShrink: 1 },
   readingText: { color: colors.text, fontSize: font.small, lineHeight: 20, marginTop: 4 },
   blessing: { color: colors.textMuted, fontSize: font.tiny, marginTop: 2 },
 

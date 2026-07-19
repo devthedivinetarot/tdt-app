@@ -1,21 +1,15 @@
 import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
-import { Platform } from 'react-native';
-import {
-  onAuthStateChanged, signInWithPhoneNumber, signOut as fbSignOut,
-  GoogleAuthProvider, signInWithCredential, signInWithPopup,
-} from 'firebase/auth';
+import { onAuthStateChanged, signOut as fbSignOut } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
-import { FirebaseRecaptchaVerifierModal } from 'expo-firebase-recaptcha';
-import * as Google from 'expo-auth-session/providers/google';
-import * as WebBrowser from 'expo-web-browser';
-import { auth, db, firebaseConfig, GOOGLE_WEB_CLIENT_ID } from '../firebase';
-
-WebBrowser.maybeCompleteAuthSession();
+import { auth, db } from '../firebase';
+import { signInGoogle } from './googleSignIn';
 
 // ---------------------------------------------------------------------------
-// Real auth: Firebase Phone (SMS OTP) + Firestore-backed profile.
-// Google is stubbed until the Google provider is enabled in Firebase (that's
-// what adds the OAuth client to google-services.json).
+// Auth: Google (native via @react-native-google-signin, web via Firebase popup)
+// + Firestore-backed profile.
+// Phone OTP is temporarily disabled — the expo-firebase-recaptcha verifier
+// pulled in a deprecated native module (expo-firebase-core) that fails the
+// Android build on Gradle 8. To be re-enabled with a build-safe verifier.
 // ---------------------------------------------------------------------------
 
 const AuthContext = createContext(null);
@@ -25,20 +19,6 @@ export function AuthProvider({ children }) {
   const [ready, setReady] = useState(false);
   const [pendingPhone, setPendingPhone] = useState(null);
   const confirmationRef = useRef(null);
-  const recaptchaRef = useRef(null);
-
-  // Google sign-in (Expo AuthSession → Firebase credential).
-  const [, googleResponse, googlePrompt] = Google.useIdTokenAuthRequest({
-    clientId: GOOGLE_WEB_CLIENT_ID,
-  });
-  useEffect(() => {
-    if (googleResponse && googleResponse.type === 'success') {
-      const idToken = googleResponse.params && googleResponse.params.id_token;
-      if (idToken) {
-        signInWithCredential(auth, GoogleAuthProvider.credential(idToken)).catch(() => {});
-      }
-    }
-  }, [googleResponse]);
 
   useEffect(() => {
     let unsub = () => {};
@@ -76,33 +56,15 @@ export function AuthProvider({ children }) {
 
   const signInWithGoogle = async () => {
     try {
-      if (Platform.OS === 'web') {
-        // Firebase handles the OAuth popup; localhost is a pre-authorized
-        // domain, so no Google Cloud redirect-URI setup is needed for the
-        // web preview. Requires the Google provider enabled in Firebase Auth.
-        const provider = new GoogleAuthProvider();
-        await signInWithPopup(auth, provider); // onAuthStateChanged sets the user
-        return true;
-      }
-      const res = await googlePrompt();
-      return !!(res && res.type === 'success'); // onAuthStateChanged sets the user
+      return await signInGoogle(auth); // platform-split: native SDK / web popup
     } catch (e) {
       return false;
     }
   };
 
-  const startPhoneOTP = async (phone) => {
-    if (!/^\d{10}$/.test(phone)) return false;
-    // Phone OTP uses a native reCAPTCHA modal — not available in the web preview.
-    if (Platform.OS === 'web' || !recaptchaRef.current) return false;
-    try {
-      confirmationRef.current = await signInWithPhoneNumber(auth, '+91' + phone, recaptchaRef.current);
-      setPendingPhone(phone);
-      return true;
-    } catch (e) {
-      return false;
-    }
-  };
+  // Temporarily disabled (see file header). Returns false so the UI shows a
+  // graceful "use Google sign-in" path instead of crashing.
+  const startPhoneOTP = async () => false;
 
   const verifyOTP = async (code) => {
     if (!/^\d{6}$/.test(code) || !confirmationRef.current) return false;
@@ -140,13 +102,6 @@ export function AuthProvider({ children }) {
       value={{ user, ready, pendingPhone, signInWithGoogle, startPhoneOTP, verifyOTP, cancelPhone, saveProfile, signOut }}
     >
       {children}
-      {Platform.OS !== 'web' && (
-        <FirebaseRecaptchaVerifierModal
-          ref={recaptchaRef}
-          firebaseConfig={firebaseConfig}
-          attemptInvisibleVerification
-        />
-      )}
     </AuthContext.Provider>
   );
 }

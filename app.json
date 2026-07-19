@@ -12,7 +12,9 @@
       "resizeMode": "contain",
       "backgroundColor": "#150b2e"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.thedivinetarot.app"
@@ -23,7 +25,12 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#150b2e"
-      }
+      },
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.ACCESS_COARSE_LOCATION",
+        "android.permission.ACCESS_FINE_LOCATION"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -33,11 +40,36 @@
     "plugins": [
       "expo-router",
       "expo-localization",
-      ["expo-notifications", { "color": "#e9c46a" }],
-      ["expo-image-picker", { "photosPermission": "Allow The Divine Tarot to set your profile photo." }]
+      [
+        "expo-notifications",
+        {
+          "color": "#e9c46a"
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow The Divine Tarot to set your profile photo."
+        }
+      ],
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Allow The Divine Tarot to attach your city, only if you enable location sharing, to improve regional guidance."
+        }
+      ],
+      "@react-native-google-signin/google-signin"
     ],
     "experiments": {
       "typedRoutes": false
+    },
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "8f23bfc6-cb9d-4880-a2b3-67ad80673be1"
+      }
     }
   }
 }
