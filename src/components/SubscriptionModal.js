@@ -32,7 +32,8 @@ export default function SubscriptionModal({ visible, onClose, onSubscribed }) {
   };
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
+    <>
+    <Modal visible={visible && !pay} transparent animationType="fade" onRequestClose={onClose}>
       <View style={styles.backdrop}>
         <PressableScale to={1} onPress={onClose} style={StyleSheet.absoluteFill} />
         <View style={styles.card}>
@@ -59,16 +60,17 @@ export default function SubscriptionModal({ visible, onClose, onSubscribed }) {
           </PressableScale>
         </View>
       </View>
-
-      <RazorpayCheckout
-        visible={pay}
-        amount={PRICES.subscription}
-        description="30-day full access — Ginni Ki Baatein"
-        prefill={{ name: user && user.name, email: user && user.email, contact: user && user.phone }}
-        onSuccess={onPaid}
-        onClose={() => setPay(false)}
-      />
     </Modal>
+
+    <RazorpayCheckout
+      visible={pay}
+      amount={PRICES.subscription}
+      description="30-day full access — Ginni Ki Baatein"
+      prefill={{ name: user && user.name, email: user && user.email, contact: user && user.phone }}
+      onSuccess={onPaid}
+      onClose={() => setPay(false)}
+    />
+    </>
   );
 }
 

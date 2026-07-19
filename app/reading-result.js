@@ -36,7 +36,7 @@ export default function ReadingResult() {
         <Text style={styles.lockedText}>🔒 {t('reading_locked')}</Text>
         <GradientButton
           label={t('reading_unlock_cta')}
-          onPress={() => { /* TODO: IAP / Razorpay */ }}
+          onPress={() => router.replace('/reading')}
           style={{ alignSelf: 'stretch' }}
         />
       </View>
