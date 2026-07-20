@@ -66,17 +66,19 @@ export function drawCards(n) {
   return out;
 }
 
+// Quick-question chips. `key` → i18n label (translated per language); `topic`
+// → the reading-engine intent (so classification is exact regardless of language).
 export const TEMPLATES = [
-  { emoji: '🪄', text: 'Yes / No reading' },
-  { emoji: '🌅', text: 'Aaj ka din kaisa hoga' },
-  { emoji: '💞', text: 'Aapka union kab hoga' },
-  { emoji: '💍', text: 'Aapki shaadi kab hogi' },
-  { emoji: '💖', text: 'Aapko life partner kab milega' },
-  { emoji: '✨', text: 'Aapko soulmate kab milega' },
-  { emoji: '👶', text: 'Aapko baby kab hoga' },
-  { emoji: '💭', text: 'Partner current feelings' },
-  { emoji: '🔮', text: 'Relationship past, present, future' },
-  { emoji: '🌌', text: 'Universe guidance' },
+  { emoji: '🪄', key: 'tpl_yesno', topic: 'yes_no_guidance' },
+  { emoji: '🌅', key: 'tpl_daily', topic: 'daily' },
+  { emoji: '💞', key: 'tpl_union', topic: 'union' },
+  { emoji: '💍', key: 'tpl_shaadi', topic: 'shaadi' },
+  { emoji: '💖', key: 'tpl_life_partner', topic: 'life_partner' },
+  { emoji: '✨', key: 'tpl_soulmate', topic: 'soulmate' },
+  { emoji: '👶', key: 'tpl_baby', topic: 'baby' },
+  { emoji: '💭', key: 'tpl_partner_feelings', topic: 'partner_feelings' },
+  { emoji: '🔮', key: 'tpl_relationship_ppf', topic: 'relationship_ppf' },
+  { emoji: '🌌', key: 'tpl_universe', topic: 'universe_guidance' },
 ];
 
 export const welcomeMessage = (name) =>

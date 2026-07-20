@@ -19,7 +19,9 @@ import AmbientStars from './AmbientStars';
 import HistoryModal from './HistoryModal';
 import SubscriptionModal from './SubscriptionModal';
 import { useAuth } from '../context/AuthContext';
-import { cardImage, TEMPLATES, welcomeMessage } from '../data/tarot';
+import { useLanguage } from '../context/LanguageContext';
+import LangButton from './LangButton';
+import { cardImage, TEMPLATES } from '../data/tarot';
 import { classifyTopic, topicMeta, cardCountFor, getReadingByCard, preloadTopic } from '../lib/readingEngine';
 import { canRead, recordReading, getUsage } from '../lib/rateLimit';
 import { saveReading } from '../lib/history';
@@ -57,9 +59,13 @@ function FlipCard({ name, delay = 0 }) {
   );
 }
 
+const ENGINE_LANG = { en: 'english', hi: 'hindi', hinglish: 'hinglish' };
+
 export default function GinniChat() {
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
+  const { lang } = useLanguage();
+  const engineLang = ENGINE_LANG[lang] || 'hinglish';
   const { user } = useAuth();
   const scrollRef = useRef(null);
   const readingRefs = useRef({});
@@ -88,7 +94,7 @@ export default function GinniChat() {
       const saved = await AsyncStorage.getItem('ginni.name');
       const n = saved || (user && user.name) || '';
       setName(n);
-      if (n) setMessages([{ id: uid(), role: 'ginni', text: welcomeMessage(n) }]);
+      if (n) setMessages([{ id: uid(), role: 'ginni', text: t('ginni_welcome', { name: n }) }]);
       setUsage(await getUsage());
     })();
   }, []);
@@ -100,11 +106,11 @@ export default function GinniChat() {
     if (!n) return;
     await AsyncStorage.setItem('ginni.name', n);
     setName(n);
-    setMessages([{ id: uid(), role: 'ginni', text: welcomeMessage(n) }]);
+    setMessages([{ id: uid(), role: 'ginni', text: t('ginni_welcome', { name: n }) }]);
     setUsage(await getUsage());
   };
 
-  const ask = async (question) => {
+  const ask = async (question, forcedTopic) => {
     const q = (question || '').trim();
     if (!q || picker) return;
     setInput('');
@@ -112,7 +118,7 @@ export default function GinniChat() {
     scrollDown();
 
     if (!(await canRead())) { setSubVisible(true); return; }
-    const topic = classifyTopic(q);
+    const topic = forcedTopic || classifyTopic(q);
     preloadTopic(topic); // fetch/cache the topic's KB file while the user picks
     setPicker({ topic, count: cardCountFor(topic), label: topicMeta(topic).label });
   };
@@ -123,7 +129,7 @@ export default function GinniChat() {
     const label = picker.label;
     await preloadTopic(topic); // guarantee the topic file is loaded before reveal
     const built = cards.map((c, i) => ({
-      ...getReadingByCard(topic, c),
+      ...getReadingByCard(topic, c, engineLang),
       position: cards.length === 3 ? PPF[i] : null,
     }));
     setPicker(null);
@@ -142,10 +148,10 @@ export default function GinniChat() {
       <View style={[styles.root, styles.center, { padding: spacing.xl }]}>
         <AmbientStars count={20} />
         <View style={styles.moon}><Ionicons name="moon" size={30} color={colors.gold} /></View>
-        <Text style={styles.title}>Ginni Ki Baatein</Text>
-        <Text style={styles.sub}>Enter the sanctum. Apna naam bataiye taaki main aapke liye cards nikaal sakoon.</Text>
-        <TextInput style={styles.nameInput} value={nameInput} onChangeText={setNameInput} placeholder="Aapka naam" placeholderTextColor={colors.textMuted} onSubmitEditing={enter} returnKeyType="done" />
-        <PressableScale to={0.96} onPress={enter} style={styles.enterBtn}><Text style={styles.enterText}>Enter the Sanctum ✨</Text></PressableScale>
+        <Text style={styles.title}>{t('onboarding_title')}</Text>
+        <Text style={styles.sub}>{t('onboarding_sub')}</Text>
+        <TextInput style={styles.nameInput} value={nameInput} onChangeText={setNameInput} placeholder={t('name_ph')} placeholderTextColor={colors.textMuted} onSubmitEditing={enter} returnKeyType="done" />
+        <PressableScale to={0.96} onPress={enter} style={styles.enterBtn}><Text style={styles.enterText}>{t('enter_sanctum')}</Text></PressableScale>
       </View>
     );
   }
@@ -162,6 +168,7 @@ export default function GinniChat() {
           <Text style={styles.hName}>Ginni</Text>
           <Text style={styles.hStatus}>{t('in_session')}</Text>
         </View>
+        <LangButton />
         <PressableScale to={0.9} onPress={() => setHistVisible(true)} style={styles.histBtn} hitSlop={8}>
           <Ionicons name="time-outline" size={20} color={colors.gold} />
         </PressableScale>
@@ -205,9 +212,9 @@ export default function GinniChat() {
       </ScrollView>
 
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.tpls} contentContainerStyle={{ paddingHorizontal: spacing.md, gap: spacing.sm }}>
-        {TEMPLATES.map((t) => (
-          <PressableScale key={t.text} to={0.95} onPress={() => ask(t.text)} style={styles.chip}>
-            <Text style={styles.chipText}>{t.emoji} {t.text}</Text>
+        {TEMPLATES.map((tpl) => (
+          <PressableScale key={tpl.key} to={0.95} onPress={() => ask(t(tpl.key), tpl.topic)} style={styles.chip}>
+            <Text style={styles.chipText}>{tpl.emoji} {t(tpl.key)}</Text>
           </PressableScale>
         ))}
       </ScrollView>

@@ -118,5 +118,20 @@
   "ask_placeholder": "Apna sawaal likhiye…",
   "draw": "Draw",
   "premium_unlimited": "✨ Premium · unlimited readings",
-  "free_remaining": "{{n}} free readings baaki"
+  "free_remaining": "{{n}} free readings baaki",
+  "ginni_welcome": "Namaste {{name}}. 🌙 Main Ginni hoon. Ek gehri saans lijiye, aur jab aap tayyar hon, woh sawaal poochhiye jo aapke zehan mein chal raha hai. Cards poori grace ke saath baat karengi. 🔮",
+  "onboarding_title": "Ginni Ki Baatein",
+  "onboarding_sub": "Enter the sanctum. Apna naam bataiye taaki main aapke liye cards nikaal sakoon.",
+  "name_ph": "Aapka naam",
+  "enter_sanctum": "Enter the Sanctum ✨",
+  "tpl_yesno": "Yes / No reading",
+  "tpl_daily": "Aaj ka din kaisa hoga",
+  "tpl_union": "Aapka union kab hoga",
+  "tpl_shaadi": "Aapki shaadi kab hogi",
+  "tpl_life_partner": "Life partner kab milega",
+  "tpl_soulmate": "Soulmate kab milega",
+  "tpl_baby": "Baby kab hoga",
+  "tpl_partner_feelings": "Partner ki current feelings",
+  "tpl_relationship_ppf": "Relationship past, present, future",
+  "tpl_universe": "Universe guidance"
 }

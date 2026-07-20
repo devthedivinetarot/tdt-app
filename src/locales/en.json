@@ -118,5 +118,20 @@
   "ask_placeholder": "Ask your question…",
   "draw": "Draw",
   "premium_unlimited": "✨ Premium · unlimited readings",
-  "free_remaining": "{{n}} free readings remaining"
+  "free_remaining": "{{n}} free readings remaining",
+  "ginni_welcome": "Namaste {{name}}. 🌙 I am Ginni. Take a deep breath, and when you're ready, ask the question on your mind. The cards will speak with the grace it deserves. 🔮",
+  "onboarding_title": "Ginni Ki Baatein",
+  "onboarding_sub": "Enter the sanctum. Tell me your name so I can draw the cards for you.",
+  "name_ph": "Your name",
+  "enter_sanctum": "Enter the Sanctum ✨",
+  "tpl_yesno": "Yes / No reading",
+  "tpl_daily": "How will my day be",
+  "tpl_union": "When will we reunite",
+  "tpl_shaadi": "When will I marry",
+  "tpl_life_partner": "When will I find my partner",
+  "tpl_soulmate": "When will I meet my soulmate",
+  "tpl_baby": "When will I have a baby",
+  "tpl_partner_feelings": "My partner's current feelings",
+  "tpl_relationship_ppf": "Relationship: past, present, future",
+  "tpl_universe": "Universe guidance"
 }
