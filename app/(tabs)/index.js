@@ -13,6 +13,7 @@ import Screen from '../../src/components/Screen';
 import GradientButton from '../../src/components/GradientButton';
 import CardOfDay from '../../src/components/CardOfDay';
 import Shimmer from '../../src/components/Shimmer';
+import TarotImage from '../../src/components/TarotImage';
 import { ASSETS } from '../../src/assets';
 import { SAMPLE } from '../../src/data/cards';
 import { TESTIMONIALS } from '../../src/data/testimonials';
@@ -182,7 +183,7 @@ export default function Home() {
           {SAMPLE.map((c, i) => (
             <Animated.View key={c.id} entering={FadeInDown.delay(i * 120).duration(500)} style={styles.tarot}>
               <View style={styles.tarotImgWrap}>
-                <Image source={{ uri: c.image }} style={styles.tarotImg} resizeMode="cover" />
+                <TarotImage uri={c.image} name={c.name} style={styles.tarotImg} />
                 <Shimmer delay={i * 500} />
               </View>
               <Text style={styles.tarotName} numberOfLines={1}>{c.name}</Text>

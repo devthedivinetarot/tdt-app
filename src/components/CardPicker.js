@@ -11,7 +11,7 @@ import PressableScale from './PressableScale';
 import CardBack from './CardBack';
 import AmbientStars from './AmbientStars';
 import { DECK } from '../data/tarot';
-import { colors, spacing, radius, font, serif, shadow } from '../theme';
+import { colors, spacing, radius, font, serif, shadow, IS_WEB } from '../theme';
 
 const { width: SCREEN_W } = Dimensions.get('window');
 const CARD_W = 96;
@@ -51,7 +51,10 @@ function FanCard({ name, index, selected, order, onPress, scrollX }) {
     const d = appear.value;
     const s = sel.value;
     const cardCenter = SIDE + index * STEP + CARD_W / 2;
-    const dist = cardCenter - scrollX.value - HALF;         // px from viewport centre
+    // On web (reanimated runs on the main thread) reading scrollX here would make
+    // all 78 cards recompute every scroll frame → jank. Use a static fan on web.
+    const sx = IS_WEB ? 0 : scrollX.value;
+    const dist = cardCenter - sx - HALF;                    // px from viewport centre
     const nd = Math.max(-1, Math.min(1, dist / (STEP * 4))); // fan tilt, saturates at edges
     const near = 1 - Math.min(1, Math.abs(dist) / (STEP * 2.4)); // 1 at centre → 0 away
     const flyX = (1 - d) * Math.max(-150, Math.min(150, HALF - cardCenter)) * 0.5;

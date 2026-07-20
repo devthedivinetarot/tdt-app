@@ -111,5 +111,12 @@
   "opt_self": "Self-employed",
   "opt_business": "Business",
   "opt_homemaker": "Homemaker",
-  "opt_occ_other": "Other"
+  "opt_occ_other": "Other",
+  "guidance_only": "Sirf guidance ke liye",
+  "share": "Share karo",
+  "in_session": "Session mein · Deck taiyaar hai ✨",
+  "ask_placeholder": "Apna sawaal likhiye…",
+  "draw": "Draw",
+  "premium_unlimited": "✨ Premium · unlimited readings",
+  "free_remaining": "{{n}} free readings baaki"
 }

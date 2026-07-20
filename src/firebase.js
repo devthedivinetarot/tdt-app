@@ -1,11 +1,9 @@
-// Firebase foundation for The Divine Tarot.
-// The apiKey here is a public client identifier (safe to ship) — it's protected
-// by Firebase security rules + authorized domains, NOT a secret.
-import { Platform } from 'react-native';
-import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getAuth, initializeAuth, getReactNativePersistence } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+// Plain Firebase configuration constants (no SDK imported here).
+// The apiKey is a public client identifier (safe to ship) — protected by
+// Firebase security rules + authorized domains, NOT a secret.
+//
+// Native uses @react-native-firebase (reads google-services.json); web uses the
+// Firebase JS SDK with this config. See authBackend.native.js / authBackend.web.js.
 
 export const firebaseConfig = {
   apiKey: 'AIzaSyDNhsRnGWeb8XbkKl9HUDIr_YbFsTso_EY',
@@ -17,18 +15,7 @@ export const firebaseConfig = {
   measurementId: 'G-0P4MJC69MM',
 };
 
-const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
-
-// Persist the signed-in user across app restarts (native uses AsyncStorage).
-export const auth =
-  Platform.OS === 'web'
-    ? getAuth(app)
-    : initializeAuth(app, { persistence: getReactNativePersistence(AsyncStorage) });
-
-export const db = getFirestore(app);
-export { app };
-
-// Google OAuth Web client ID (from Firebase → Auth → Google → Web SDK config).
+// Google OAuth Web client ID (the "server" client used to mint the ID token).
 // Public identifier, safe to ship.
 export const GOOGLE_WEB_CLIENT_ID =
   '491968377977-oo00ivdvpl41vmbhmjig7kp2t6juu7je.apps.googleusercontent.com';

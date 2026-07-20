@@ -1,0 +1,19 @@
+rules_version = '2';
+
+// The Divine Tarot — Firestore security rules.
+// Each signed-in user can read/write ONLY their own profile document.
+// Everything else is denied by default.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // User profiles: /users/{uid}
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Deny all other access.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

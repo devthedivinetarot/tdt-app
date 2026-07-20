@@ -111,5 +111,12 @@
   "opt_self": "स्व-रोज़गार",
   "opt_business": "व्यापार",
   "opt_homemaker": "गृहिणी",
-  "opt_occ_other": "अन्य"
+  "opt_occ_other": "अन्य",
+  "guidance_only": "केवल मार्गदर्शन के लिए",
+  "share": "साझा करें",
+  "in_session": "सत्र जारी · डेक तैयार है ✨",
+  "ask_placeholder": "अपना प्रश्न लिखें…",
+  "draw": "कार्ड निकालें",
+  "premium_unlimited": "✨ प्रीमियम · असीमित रीडिंग",
+  "free_remaining": "{{n}} मुफ़्त रीडिंग बाकी"
 }

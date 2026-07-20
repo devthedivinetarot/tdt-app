@@ -111,5 +111,12 @@
   "opt_self": "Self-employed",
   "opt_business": "Business",
   "opt_homemaker": "Homemaker",
-  "opt_occ_other": "Other"
+  "opt_occ_other": "Other",
+  "guidance_only": "For guidance purposes only",
+  "share": "Share",
+  "in_session": "In session · The deck is prepared ✨",
+  "ask_placeholder": "Ask your question…",
+  "draw": "Draw",
+  "premium_unlimited": "✨ Premium · unlimited readings",
+  "free_remaining": "{{n}} free readings remaining"
 }

@@ -1,15 +1,19 @@
 import React, { useEffect, useRef, useState } from 'react';
 import {
-  View, Text, TextInput, Image, ScrollView, KeyboardAvoidingView, Platform,
+  View, Text, TextInput, ScrollView, KeyboardAvoidingView, Platform,
   ActivityIndicator, StyleSheet,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTranslation } from 'react-i18next';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming, withDelay } from 'react-native-reanimated';
+import { captureRef } from 'react-native-view-shot';
+import * as Sharing from 'expo-sharing';
 
 import PressableScale from './PressableScale';
 import CardBack from './CardBack';
+import TarotImage from './TarotImage';
 import CardPicker from './CardPicker';
 import AmbientStars from './AmbientStars';
 import HistoryModal from './HistoryModal';
@@ -26,11 +30,7 @@ const PPF = ['Past', 'Present', 'Future'];
 const uid = () => Math.random().toString(36).slice(2);
 
 function CardArt({ name }) {
-  const [failed, setFailed] = useState(false);
-  if (failed || !cardImage(name)) {
-    return <View style={[styles.cardImg, styles.cardFallback]}><Text style={styles.cardFallbackText}>{name}</Text></View>;
-  }
-  return <Image source={{ uri: cardImage(name) }} style={styles.cardImg} resizeMode="cover" onError={() => setFailed(true)} />;
+  return <TarotImage uri={cardImage(name)} name={name} style={styles.cardImg} />;
 }
 
 // Flips from the mystic back to the face-up card art once, staggered per card.
@@ -59,8 +59,20 @@ function FlipCard({ name, delay = 0 }) {
 
 export default function GinniChat() {
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
   const { user } = useAuth();
   const scrollRef = useRef(null);
+  const readingRefs = useRef({});
+
+  const shareReading = async (id) => {
+    if (Platform.OS === 'web') return;
+    try {
+      const node = readingRefs.current[id];
+      if (!node) return;
+      const uri = await captureRef(node, { format: 'png', quality: 0.95 });
+      if (await Sharing.isAvailableAsync()) await Sharing.shareAsync(uri);
+    } catch (e) { /* ignore */ }
+  };
 
   const [name, setName] = useState(null);
   const [nameInput, setNameInput] = useState('');
@@ -138,7 +150,7 @@ export default function GinniChat() {
     );
   }
 
-  const remainingLabel = usage.premium ? '✨ Premium · unlimited readings' : `${usage.remaining} free reading${usage.remaining === 1 ? '' : 's'} remaining`;
+  const remainingLabel = usage.premium ? t('premium_unlimited') : t('free_remaining', { n: usage.remaining });
 
   // ---- Chat ----
   return (
@@ -148,7 +160,7 @@ export default function GinniChat() {
         <View style={styles.moonSm}><Ionicons name="moon" size={18} color={colors.gold} /></View>
         <View style={{ flex: 1 }}>
           <Text style={styles.hName}>Ginni</Text>
-          <Text style={styles.hStatus}>In session · The deck is prepared ✨</Text>
+          <Text style={styles.hStatus}>{t('in_session')}</Text>
         </View>
         <PressableScale to={0.9} onPress={() => setHistVisible(true)} style={styles.histBtn} hitSlop={8}>
           <Ionicons name="time-outline" size={20} color={colors.gold} />
@@ -161,7 +173,12 @@ export default function GinniChat() {
           if (m.role === 'user') return <View key={m.id} style={[styles.bubble, styles.userBubble]}><Text style={styles.userText}>{m.text}</Text></View>;
           if (m.role === 'ginni') return <View key={m.id} style={[styles.bubble, styles.ginniBubble]}><Text style={styles.ginniText}>{m.text}</Text></View>;
           return (
-            <View key={m.id} style={[styles.bubble, styles.ginniBubble, styles.readingBubble]}>
+            <View
+              key={m.id}
+              collapsable={false}
+              ref={(el) => { readingRefs.current[m.id] = el; }}
+              style={[styles.bubble, styles.ginniBubble, styles.readingBubble]}
+            >
               <Text style={styles.topicLabel}>✨ {m.topicLabel}</Text>
               {m.cards.map((c, i) => (
                 <View key={i} style={styles.cardRow}>
@@ -173,7 +190,15 @@ export default function GinniChat() {
                   </View>
                 </View>
               ))}
-              <Text style={styles.blessing}>🌙 For guidance purposes only</Text>
+              <View style={styles.readingFooter}>
+                <Text style={styles.blessing}>🌙 {t('guidance_only')}</Text>
+                {Platform.OS !== 'web' ? (
+                  <PressableScale to={0.94} onPress={() => shareReading(m.id)} style={styles.shareBtn}>
+                    <Ionicons name="share-social-outline" size={14} color={colors.gold} />
+                    <Text style={styles.shareText}>{t('share')}</Text>
+                  </PressableScale>
+                ) : null}
+              </View>
             </View>
           );
         })}
@@ -188,9 +213,9 @@ export default function GinniChat() {
       </ScrollView>
 
       <View style={[styles.composer, { paddingBottom: Math.max(insets.bottom, 8) + 92 }]}>
-        <TextInput style={styles.input} value={input} onChangeText={setInput} placeholder="Apna sawaal likhiye…" placeholderTextColor={colors.textMuted} onSubmitEditing={() => ask(input)} returnKeyType="send" />
+        <TextInput style={styles.input} value={input} onChangeText={setInput} placeholder={t('ask_placeholder')} placeholderTextColor={colors.textMuted} onSubmitEditing={() => ask(input)} returnKeyType="send" />
         <PressableScale to={0.9} onPress={() => ask(input)} style={[styles.draw, !input.trim() && { opacity: 0.5 }]}>
-          <Text style={styles.drawText}>Draw</Text>
+          <Text style={styles.drawText}>{t('draw')}</Text>
         </PressableScale>
       </View>
 
@@ -250,7 +275,10 @@ const styles = StyleSheet.create({
   pos: { color: colors.textMuted, fontSize: font.tiny, fontWeight: '800', letterSpacing: 1 },
   cardName: { color: colors.gold, fontFamily: serif, fontSize: font.h3, fontWeight: '700', flexShrink: 1 },
   readingText: { color: colors.text, fontSize: font.small, lineHeight: 20, marginTop: 4 },
-  blessing: { color: colors.textMuted, fontSize: font.tiny, marginTop: 2 },
+  readingFooter: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: spacing.sm },
+  blessing: { color: colors.textMuted, fontSize: font.tiny, flex: 1 },
+  shareBtn: { flexDirection: 'row', alignItems: 'center', gap: 5, borderWidth: 1, borderColor: colors.glassBorder, borderRadius: radius.pill, paddingHorizontal: 12, paddingVertical: 6, backgroundColor: colors.bgCard },
+  shareText: { color: colors.gold, fontSize: font.tiny, fontWeight: '800' },
 
   tpls: { maxHeight: 44, flexGrow: 0 },
   chip: { backgroundColor: colors.bgCard, borderWidth: 1, borderColor: colors.border, borderRadius: radius.pill, paddingHorizontal: 12, paddingVertical: 8 },

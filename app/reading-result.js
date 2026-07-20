@@ -1,11 +1,12 @@
 import React, { useMemo } from 'react';
-import { View, Text, Image, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { useRouter } from 'expo-router';
 import Animated, { FadeInDown } from 'react-native-reanimated';
 import Screen from '../src/components/Screen';
 import GradientButton from '../src/components/GradientButton';
 import OutlineButton from '../src/components/OutlineButton';
+import TarotImage from '../src/components/TarotImage';
 import { drawThree } from '../src/data/cards';
 import { colors, spacing, radius, font, serif } from '../src/theme';
 
@@ -22,7 +23,7 @@ export default function ReadingResult() {
 
       {cards.map((c, i) => (
         <Animated.View key={c.id} entering={FadeInDown.delay(i * 120).duration(500)} style={styles.card}>
-          <Image source={{ uri: c.image }} style={styles.cardImg} resizeMode="cover" />
+          <TarotImage uri={c.image} name={c.name} style={styles.cardImg} />
           <Text style={styles.name}>{c.name}</Text>
           <Text style={styles.msg}>{c.message}</Text>
         </Animated.View>

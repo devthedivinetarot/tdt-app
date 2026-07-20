@@ -32,8 +32,6 @@ const RANK_NUM = {
   Ace: '01', Two: '02', Three: '03', Four: '04', Five: '05', Six: '06', Seven: '07',
   Eight: '08', Nine: '09', Ten: '10', Page: '11', Knight: '12', Queen: '13', King: '14',
 };
-const WIKI_BASE = 'https://commons.wikimedia.org/wiki/Special:FilePath/';
-
 function wikiFile(name) {
   if (WIKI_MAJOR[name]) return `RWS_Tarot_${WIKI_MAJOR[name]}.jpg`;
   const m = name.match(/^(\w+) of (\w+)$/);
@@ -45,9 +43,15 @@ function wikiFile(name) {
   return null;
 }
 
+// The raw Wikimedia files (public-domain Rider–Waite–Smith) block direct hotlinks
+// from apps (generic User-Agent → 403), which is why the images were blank. We
+// route them through the weserv.nl image CDN, which fetches with a proper UA,
+// resizes, and serves cache-friendly images that load reliably in the app.
 export function cardImage(name) {
   const wf = wikiFile(name);
-  return wf ? `${WIKI_BASE}${wf}?width=420` : '';
+  if (!wf) return '';
+  const src = `https://commons.wikimedia.org/wiki/Special:FilePath/${wf}`;
+  return `https://images.weserv.nl/?url=${encodeURIComponent(src)}&w=420&output=jpg&q=82`;
 }
 
 // Draw `n` unique cards — all UPRIGHT.

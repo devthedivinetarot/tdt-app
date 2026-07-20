@@ -1,0 +1,22 @@
+{
+  "$schema": "https://app.kilo.ai/config.json",
+  "mcp": {
+    "firebase": {
+      "type": "local",
+      "command": [
+        "npx",
+        "-y",
+        "firebase-tools@14.15.2",
+        "experimental:mcp"
+      ]
+    },
+    "airbyte-agent-mcp": {
+      "type": "remote",
+      "url": "https://mcp.airbyte.ai/mcp"
+    },
+    "airbyte-knowledge-mcp": {
+      "type": "remote",
+      "url": "https://airbyte.mcp.kapa.ai"
+    }
+  }
+}

@@ -63,8 +63,8 @@ export async function disableLocationLogging() {
 
 function currentUser() {
   try {
-    const { auth } = require('../firebase');
-    const u = auth && auth.currentUser;
+    const { getCurrentUser } = require('../authBackend');
+    const u = getCurrentUser();
     if (!u) return {};
     return { uid: u.uid, name: u.displayName || '', email: u.email || '', phone: u.phoneNumber || '' };
   } catch (e) { return {}; }

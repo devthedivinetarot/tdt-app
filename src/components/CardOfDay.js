@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Image, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Animated, { useSharedValue, useAnimatedStyle, withTiming } from 'react-native-reanimated';
 import PressableScale from './PressableScale';
 import CardBack from './CardBack';
+import TarotImage from './TarotImage';
 import { DECK, cardImage } from '../data/tarot';
 import KB from '../data/ginni-kb';
 import { success } from '../lib/haptics';
@@ -71,11 +72,7 @@ export default function CardOfDay() {
             <CardBack style={StyleSheet.absoluteFill} moon={30} />
           </Animated.View>
           <Animated.View style={[StyleSheet.absoluteFill, styles.face, front]}>
-            {cardImage(card) ? (
-              <Image source={{ uri: cardImage(card) }} style={styles.img} resizeMode="cover" />
-            ) : (
-              <View style={[styles.img, styles.imgFallback]}><Text style={styles.fallbackText}>{card}</Text></View>
-            )}
+            <TarotImage uri={cardImage(card)} name={card} style={styles.img} />
           </Animated.View>
         </PressableScale>
 

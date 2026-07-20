@@ -58,7 +58,9 @@
           "locationWhenInUsePermission": "Allow The Divine Tarot to attach your city, only if you enable location sharing, to improve regional guidance."
         }
       ],
-      "@react-native-google-signin/google-signin"
+      "@react-native-google-signin/google-signin",
+      "@react-native-firebase/app",
+      "@react-native-firebase/auth"
     ],
     "experiments": {
       "typedRoutes": false

@@ -1,8 +1,8 @@
-// Sample deck. In production this comes from your existing reading API
-// (thedivinetarotonline.com). Kept local here so the app runs standalone.
+// Sample deck for the Home "Cards Ka Message" section.
+// Uses the same reliable, cached card art as the reading engine.
+import { cardImage } from './tarot';
 
-const img = (name) =>
-  `https://thedivinetarotonline.com/_next/image?url=%2Fcard_img%2F${encodeURIComponent(name)}.png&w=640&q=75`;
+const img = (name) => cardImage(name);
 
 // The 3 sample cards shown on the website home ("Cards Ka Message"), exact copy.
 export const SAMPLE = [
